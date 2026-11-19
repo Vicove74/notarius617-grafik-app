@@ -1,0 +1,59 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+
+      - name: Икони от сайта
+        run: |
+          set -e
+          curl -fsSL https://notarius617.com/wp-content/uploads/2026/11/grafik-617-icon-512.png -o icon.png
+          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            n=${d%%:*}; s=${d##*:}
+            mkdir -p app/src/main/res/mipmap-$n
+            convert icon.png -resize ${s}x${s} app/src/main/res/mipmap-$n/ic_launcher.png
+          done
+
+      - name: Build
+        run: gradle --no-daemon assembleRelease
+
+      - name: Подготовка на файла
+        run: cp app/build/outputs/apk/release/app-release.apk grafik-617.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: grafik-617-apk
+          path: grafik-617.apk
+
+      - name: Публикуване (Release)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: График 617 v1.0.${{ github.run_number }}
+          body: |
+            Android приложение за вътрешния график на notarius617.com.
+            Постоянен линк към последната версия:
+            https://github.com/${{ github.repository }}/releases/latest/download/grafik-617.apk
+          files: grafik-617.apk
+          make_latest: true

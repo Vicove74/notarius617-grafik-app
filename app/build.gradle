@@ -1,0 +1,43 @@
+plugins {
+    id 'com.android.application'
+}
+
+def runNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1') as Integer
+
+android {
+    namespace 'com.notarius617.grafik'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.notarius617.grafik'
+        minSdk 24
+        targetSdk 34
+        versionCode runNumber
+        versionName "1.0.${runNumber}"
+    }
+
+    // Един и същ ключ при всеки build, за да се обновява приложението без преинсталиране.
+    signingConfigs {
+        app {
+            storeFile file('signing.keystore')
+            storePassword 'grafik617'
+            keyAlias 'grafik617'
+            keyPassword 'grafik617'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.app
+        }
+        debug {
+            signingConfig signingConfigs.app
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
