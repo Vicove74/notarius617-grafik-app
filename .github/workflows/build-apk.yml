@@ -19,8 +19,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - uses: android-actions/setup-android@v3
-
       - uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.7'
@@ -32,11 +30,13 @@ jobs:
           for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
             n=${d%%:*}; s=${d##*:}
             mkdir -p app/src/main/res/mipmap-$n
-            convert icon.png -resize ${s}x${s} app/src/main/res/mipmap-$n/ic_launcher.png
+            $(command -v magick || command -v convert) icon.png -resize ${s}x${s} app/src/main/res/mipmap-$n/ic_launcher.png
           done
 
       - name: Build
-        run: gradle --no-daemon assembleRelease
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          gradle --no-daemon assembleRelease
 
       - name: Подготовка на файла
         run: cp app/build/outputs/apk/release/app-release.apk grafik-617.apk
